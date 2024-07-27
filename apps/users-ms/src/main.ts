@@ -1,12 +1,12 @@
 import { NestFactory } from '@nestjs/core';
-import { UsersModule } from './users.module';
-import { envs } from 'apps/config';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { UsersMsModule } from './users-ms.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { envs } from 'apps/config';
 
 async function bootstrap() {
   const logger = new Logger('Main-Users')
-  const app = await NestFactory.createMicroservice<MicroserviceOptions>(UsersModule, {
+  const app = await NestFactory.createMicroservice<MicroserviceOptions>(UsersMsModule, {
     transport: Transport.NATS,
     options: {
       servers: envs.natsServer,

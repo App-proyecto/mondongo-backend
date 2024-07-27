@@ -6,12 +6,14 @@ import * as joi from 'joi';
 interface envVars {
     PORT_CLIENT_GATEWAY: number;
     NATS_SERVERS: string;
+    DATABASE_URL: string;
 }
 
 // Esquema de validación de variables de entorno
 const envsSchema = joi.object({
     PORT_CLIENT_GATEWAY: joi.number().required(),
     NATS_SERVERS: joi.string().required(),
+    DATABASE_URL: joi.string().required()
 }).unknown(true);
 
 // Validación de variables de entorno
@@ -29,4 +31,5 @@ const envVars: envVars = value;
 export const envs = {
     portClientGateway: envVars.PORT_CLIENT_GATEWAY,
     natsServer: envVars.NATS_SERVERS,
+    databaseUrl: envVars.DATABASE_URL,
 }
