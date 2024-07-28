@@ -1,6 +1,7 @@
 Pasos para correr la app
 1. Instala todas las paqueterias con el comando 'npm i'
 3. Correr el comando `docker run -d --name nats-server -p 4222:4222 -p 6222:6222 -p 8222:8222 nats` para levantar el servidor nats en docker
+4. Correr el comando `docker run --name mongodb -d -p 27017:27017 -v mongodb_data:/data/db mongo:latest` para levantar la base de datos en docker
 2. Configura las variables de entorno del archivo .env acorde al archivo .env.template
 4. Asegurarse de tener docker corriendo
 5. Lanzar comandos:

@@ -1,6 +1,7 @@
-import { Body, Controller, Delete, Get, Inject, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Inject, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { CreateUserDto } from 'apps/common/users';
+import { ModifyUserDto } from 'apps/common/users/modify-user.dto';
 import { NATS_SERVICE } from 'apps/config';
 import { firstValueFrom } from 'rxjs';
 
@@ -36,7 +37,16 @@ export class UsersController {
     @Delete(':id')
     async deleteUser(@Param('id') id: string) {
         try {
-            return await firstValueFrom( this.client.send( 'delete_user', { id } ) );
+            return await firstValueFrom( this.client.send('delete_user', { id }) );
+        } catch (error) {
+            throw new RpcException(error);
+        }
+    }
+
+    @Patch()
+    async modifiyUser(@Body() modifyUserDto: ModifyUserDto) {
+        try {
+            return await firstValueFrom( this.client.send('modify_user', modifyUserDto) );
         } catch (error) {
             throw new RpcException(error);
         }
