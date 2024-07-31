@@ -1,6 +1,6 @@
 import { Controller, ParseUUIDPipe } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { CreateUserDto } from 'apps/common/users';
+import { CreateUserDto, LoginUserDto } from 'apps/common/users';
 import { UsersService } from './users.service';
 import { ModifyUserDto } from 'apps/common/users/modify-user.dto';
 
@@ -27,6 +27,11 @@ export class UsersController {
     @MessagePattern('modify_user')
     modifyUser(@Payload() modifyUserDto: ModifyUserDto) {
         return this.usersService.modifyUser(modifyUserDto);
+    }
+
+    @MessagePattern('login_user')
+    loginUser(@Payload() loginUserDto: LoginUserDto) {
+        return this.usersService.loginUser(loginUserDto);
     }
 
 }

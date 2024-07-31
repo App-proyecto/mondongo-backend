@@ -27,6 +27,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/users-ms/tsconfig.app.json"
       }
+    },
+    "words-ms": {
+      "type": "application",
+      "root": "apps/words-ms",
+      "entryFile": "main",
+      "sourceRoot": "apps/words-ms/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/words-ms/tsconfig.app.json"
+      }
     }
   }
 }

@@ -1,7 +1,6 @@
-import { Body, Controller, Delete, Get, Inject, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Inject, Param, Patch, Post } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { CreateUserDto } from 'apps/common/users';
-import { ModifyUserDto } from 'apps/common/users/modify-user.dto';
+import { CreateUserDto, LoginUserDto, ModifyUserDto } from 'apps/common/users';
 import { NATS_SERVICE } from 'apps/config';
 import { firstValueFrom } from 'rxjs';
 
@@ -20,6 +19,15 @@ export class UsersController {
             throw new RpcException(error);
         }
         
+    }
+
+    @Post('login')
+    async login(@Body() loginUserDto: LoginUserDto) {
+        try {
+            return await firstValueFrom( this.client.send('login_user', loginUserDto) );
+        } catch (error) {
+            throw new RpcException(error);
+        }
     }
 
     @Get(':id')

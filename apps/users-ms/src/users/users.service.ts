@@ -1,18 +1,25 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { CreateUserDto } from 'apps/common/users';
+import { CreateUserDto, LoginUserDto } from 'apps/common/users';
 import { Model } from 'mongoose';
 import { User } from '../schemas/user.schema';
 import { RpcException } from '@nestjs/microservices';
 import { ModifyUserDto } from 'apps/common/users/modify-user.dto';
+import { hash, compare } from 'bcrypt'
 
 @Injectable()
 export class UsersService {
-    constructor( @InjectModel(User.name) private UserModel: Model<User>) {}
-
+    constructor( @InjectModel(User.name) private UserModel: Model<User> ) {}
+    
     async createUser(createUserDto: CreateUserDto) {
-        // Se busca el usuaro mediante el email, de encontrarse se lanza una excepcion
-        await this.existEmail(createUserDto.email);
+        // Se verifica el email
+        if (await this.existEmail(createUserDto.email)) { 
+            // Si se encontro el email
+            throw new RpcException( { status: HttpStatus.CONFLICT, message: `User with email ${createUserDto.email} already exist` } )
+        }
+
+        // Encriptar la contraseña antes de hacer el registro en la bd
+        createUserDto.password = await hash(createUserDto.password, 10);
 
         return await this.UserModel.create(createUserDto);
     }
@@ -46,25 +53,54 @@ export class UsersService {
         await this.getUserById(id);
 
         // Si el modifyUserDto contiene un email se busca para ver si existe, de existir se lanza una excepcion
-        if (modifyUserDto.email) { await this.existEmail(modifyUserDto.email) }
+        if (updateFields.email && this.existEmail(updateFields.email)) { 
+            // Si se encontro el email
+            throw new RpcException( { status: HttpStatus.CONFLICT, message: `User with email ${updateFields.email} already exist` } )
+        }
 
+        // Si se modificara la password se encripta
+        if (updateFields.password) {
+            updateFields.password = await hash(updateFields.password, 10);
+        }
+    
         // Buscar el user por el id y setear los campos
         return await this.UserModel.updateOne({ _id: id }, { $set: updateFields })
+    }
+
+    async loginUser(loginUserDto: LoginUserDto) {
+        const user = await this.UserModel.findOne({ email: loginUserDto.email })
+
+        // Si no se encuentra el user
+        if (!user) { 
+            throw new RpcException( { status: HttpStatus.NOT_FOUND, message: `User with email ${loginUserDto.email} not found` } );
+        }
+
+        // Verificar la contraseña
+        if(!await compare(loginUserDto.password, user.password)) {
+            throw new RpcException( { status: HttpStatus.FORBIDDEN, message: `Incorrect password` } )
+        }
+
+        return {
+            name: user.username,
+            email: user.email
+        };
     }
 
     private async existEmail(email: string) {
         // Buscar el email en la base de datos
         const user = await this.UserModel.findOne({ email: email });
 
-        // Si el usuario fue eliminado terminar la ejecucion de la funcion
-        if (user.deleted) {
-            return;
+        // Si no existe
+        if (!user) {
+            return false;
         }
 
-        // Si existe lanzar la excepcion
-        if (user) {
-            throw new RpcException( { status: HttpStatus.CONFLICT, message: `User with email ${email} already exist`} );
+        // Si el usuario fue eliminado
+        if (user.deleted) {
+            return false;
         }
+
+        return true;
     }
 
     
