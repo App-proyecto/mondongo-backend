@@ -6,7 +6,8 @@ Pasos para correr la app
 4. Asegurarse de tener docker corriendo
 5. Lanzar comandos:
     -   npm run client-gateway (Correr el cliente que se encarga de la comunicacion)
-    -   npm run users (Correr el microservicio de usuarios)
+    -   npm run users-ms (Correr el microservicio de usuarios)
+    -   npm run words-ms (Correr el microservicio de palabras)
 
 Notas:
     - Conforme avance la app la manera de correr esta cambiara para hacerla mas sencilla de momento se trabajara de esta forma

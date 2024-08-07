@@ -4,6 +4,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { envs } from 'apps/config';
 
 @Module({
-  imports: [UsersModule, MongooseModule.forRoot(envs.userDatabaseUrl)],
+  imports: [UsersModule, MongooseModule.forRoot(envs.databaseUrl)],
 })
 export class UsersMsModule {}

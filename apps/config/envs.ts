@@ -6,16 +6,18 @@ import * as joi from 'joi';
 interface envVars {
     PORT_CLIENT_GATEWAY: number;
     NATS_SERVERS: string;
-    USER_DATABASE_URL: string;
-    FOOD_DATABASE_URL: string;
+    DATABASE_URL: string;
+    EMAIL: string;
+    EMAIL_PASSWORD: string;
 }
 
 // Esquema de validación de variables de entorno
 const envsSchema = joi.object({
     PORT_CLIENT_GATEWAY: joi.number().required(),
     NATS_SERVERS: joi.string().required(),
-    USER_DATABASE_URL: joi.string().required(),
-    FOOD_DATABASE_URL: joi.string().required(),
+    DATABASE_URL: joi.string().required(),
+    EMAIL: joi.string().required(),
+    EMAIL_PASSWORD: joi.string().required()
 }).unknown(true);
 
 // Validación de variables de entorno
@@ -33,6 +35,8 @@ const envVars: envVars = value;
 export const envs = {
     portClientGateway: envVars.PORT_CLIENT_GATEWAY,
     natsServer: envVars.NATS_SERVERS,
-    userDatabaseUrl: envVars.USER_DATABASE_URL,
-    foodDatabaseUrl: envVars.FOOD_DATABASE_URL,
+    databaseUrl: envVars.DATABASE_URL,
+    email: envVars.EMAIL,
+    emailPassword: envVars.EMAIL_PASSWORD,
+
 }

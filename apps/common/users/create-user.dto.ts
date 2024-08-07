@@ -10,8 +10,8 @@ export class CreateUserDto {
     email: string;
 
     @IsString()
-    @MinLength(4)
-    @MaxLength(12)
+    @MinLength(6)
+    @MaxLength(16)
     password: string;
 
 }

@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Inject, Param, Patch, Post } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { RecoveryEmailDto } from 'apps/common/mails/recovery-email.dto';
 import { CreateUserDto, LoginUserDto, ModifyUserDto } from 'apps/common/users';
 import { NATS_SERVICE } from 'apps/config';
 import { firstValueFrom } from 'rxjs';
@@ -9,8 +10,17 @@ export class UsersController {
     constructor(
         @Inject(NATS_SERVICE) private readonly client: ClientProxy,
     ) {}
-    
-    @Post()
+        
+    @Get('recoveryCode')
+    async sendRecoveryEmail(@Body() recoveryEmailDto: RecoveryEmailDto) {
+        try {
+            return await firstValueFrom( this.client.send('send_recovery_email', recoveryEmailDto) );
+        } catch (error) {
+            throw new RpcException(error);
+        }
+    }
+
+    @Post('create')
     async createUser(@Body() createUserDto: CreateUserDto) {
         try {
             const result = await firstValueFrom( this.client.send('create_user', createUserDto) );
@@ -18,7 +28,6 @@ export class UsersController {
         } catch (error) {
             throw new RpcException(error);
         }
-        
     }
 
     @Post('login')
@@ -32,14 +41,12 @@ export class UsersController {
 
     @Get(':id')
     async getUserById(@Param('id') id: string) {
-
         try {
             const user = await firstValueFrom( this.client.send('get_user_by_id', { id } ) );
             return user;
         } catch (error) {
             throw new RpcException(error);
-        }
-        
+        } 
     }
 
     @Delete(':id')
@@ -52,7 +59,7 @@ export class UsersController {
     }
 
     @Patch()
-    async modifiyUser(@Body() modifyUserDto: ModifyUserDto) {
+    async modifyUser(@Body() modifyUserDto: ModifyUserDto) {
         try {
             return await firstValueFrom( this.client.send('modify_user', modifyUserDto) );
         } catch (error) {

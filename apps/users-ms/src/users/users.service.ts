@@ -6,10 +6,16 @@ import { User } from '../schemas/user.schema';
 import { RpcException } from '@nestjs/microservices';
 import { ModifyUserDto } from 'apps/common/users/modify-user.dto';
 import { hash, compare } from 'bcrypt'
+import { RecoveryEmailDto } from 'apps/common/mails/recovery-email.dto';
+import { EmailSender } from 'apps/common/mails/send-mails';
 
 @Injectable()
 export class UsersService {
-    constructor( @InjectModel(User.name) private UserModel: Model<User> ) {}
+
+    constructor( 
+        @InjectModel(User.name) private UserModel: Model<User>,
+        private emailSender: EmailSender
+    ) {}
     
     async createUser(createUserDto: CreateUserDto) {
         // Se verifica el email
@@ -21,7 +27,10 @@ export class UsersService {
         // Encriptar la contraseña antes de hacer el registro en la bd
         createUserDto.password = await hash(createUserDto.password, 10);
 
-        return await this.UserModel.create(createUserDto);
+        // Crear el usuario en la bd
+        const user = await this.UserModel.create(createUserDto)
+
+        return ;
     }
 
     async getUserById(id: string) {
@@ -55,7 +64,7 @@ export class UsersService {
         // Si el modifyUserDto contiene un email se busca para ver si existe, de existir se lanza una excepcion
         if (updateFields.email && this.existEmail(updateFields.email)) { 
             // Si se encontro el email
-            throw new RpcException( { status: HttpStatus.CONFLICT, message: `User with email ${updateFields.email} already exist` } )
+            throw new RpcException( { status: HttpStatus.CONFLICT, message: `Ya existe un usuario con el correo ${updateFields.email}` } )
         }
 
         // Si se modificara la password se encripta
@@ -86,6 +95,16 @@ export class UsersService {
         };
     }
 
+    async sendRecoveryCode(recoveryEmailDto: RecoveryEmailDto) {
+        // Si no existe el user en la base de datos
+        if (!this.existEmail) {
+            throw new RpcException( { status: HttpStatus.NOT_FOUND, message: `No existe un usuario con el correo ${recoveryEmailDto.email}` } );
+        }
+
+        // Intentar enviar el codigo
+        return this.emailSender.sendRecoveryEmail(recoveryEmailDto.email);
+    }
+
     private async existEmail(email: string) {
         // Buscar el email en la base de datos
         const user = await this.UserModel.findOne({ email: email });
@@ -103,6 +122,6 @@ export class UsersService {
         return true;
     }
 
-    
-
 }
+
+

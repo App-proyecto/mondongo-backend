@@ -3,6 +3,7 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import { CreateUserDto, LoginUserDto } from 'apps/common/users';
 import { UsersService } from './users.service';
 import { ModifyUserDto } from 'apps/common/users/modify-user.dto';
+import { RecoveryEmailDto } from 'apps/common/mails/recovery-email.dto';
 
 @Controller('users')
 export class UsersController {
@@ -32,6 +33,11 @@ export class UsersController {
     @MessagePattern('login_user')
     loginUser(@Payload() loginUserDto: LoginUserDto) {
         return this.usersService.loginUser(loginUserDto);
+    }
+
+    @MessagePattern('send_recovery_email')
+    sendRecoveryEmail(@Payload() recoveryEmailDto: RecoveryEmailDto) {
+        return this.usersService.sendRecoveryCode(recoveryEmailDto)
     }
 
 }
