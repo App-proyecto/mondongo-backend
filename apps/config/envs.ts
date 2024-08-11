@@ -7,6 +7,8 @@ interface envVars {
     PORT_CLIENT_GATEWAY: number;
     NATS_SERVERS: string;
     DATABASE_URL: string;
+    DEEPL_API_KEY: string;
+
     EMAIL: string;
     EMAIL_PASSWORD: string;
 }
@@ -16,6 +18,8 @@ const envsSchema = joi.object({
     PORT_CLIENT_GATEWAY: joi.number().required(),
     NATS_SERVERS: joi.string().required(),
     DATABASE_URL: joi.string().required(),
+    DEEPL_API_KEY: joi.string().required(),
+
     EMAIL: joi.string().required(),
     EMAIL_PASSWORD: joi.string().required()
 }).unknown(true);
@@ -36,6 +40,8 @@ export const envs = {
     portClientGateway: envVars.PORT_CLIENT_GATEWAY,
     natsServer: envVars.NATS_SERVERS,
     databaseUrl: envVars.DATABASE_URL,
+    deeplApiKey: envVars.DEEPL_API_KEY,
+
     email: envVars.EMAIL,
     emailPassword: envVars.EMAIL_PASSWORD,
 

@@ -36,6 +36,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/words-ms/tsconfig.app.json"
       }
+    },
+    "translator-ms": {
+      "type": "application",
+      "root": "apps/translator-ms",
+      "entryFile": "main",
+      "sourceRoot": "apps/translator-ms/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/translator-ms/tsconfig.app.json"
+      }
     }
   }
 }
