@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Inject } from '@nestjs/common';
+import { Body, Controller, Inject, Post } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { TranslateDto } from 'apps/common/translator/translate.dto';
 import { NATS_SERVICE } from 'apps/config';
@@ -10,7 +10,7 @@ export class TranslatorController {
         @Inject(NATS_SERVICE) private readonly client: ClientProxy,
     ) {}
 
-    @Get()
+    @Post('translate')
     async translate(@Body() translateDto: TranslateDto) {
         try {
             return await firstValueFrom( this.client.send('translate', translateDto) );

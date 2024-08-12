@@ -8,7 +8,7 @@ export class TranslatorService {
     constructor(private readonly deepLService: DeeplService) {}
 
     async translate(translateDto: TranslateDto) {
-        return this.deepLService.translateText(translateDto);
+        return { translation: (await this.deepLService.translateText(translateDto)).toString() };
     }
 
 }
