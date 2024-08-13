@@ -25,9 +25,11 @@ export class UsersService {
     ) {}
 
     async registerInteraction(interactionDto: InteractionDto) {
+        Logger.log(`Registering interaction for user ${interactionDto.userId} with word ${interactionDto.word}`);
         // Obtener y remplazar el id de la palabra
         const wordData = await firstValueFrom( this.client.send('get_word_by_word', {word: interactionDto.word}) );
         if (!wordData) {
+            Logger.error(`Word ${interactionDto.word} not found`);
             throw new RpcException({ status: HttpStatus.NOT_FOUND, message: `Word ${interactionDto.word} not found` });
         }
 
@@ -42,6 +44,7 @@ export class UsersService {
         // Verificar si ya existe una interacción, si no existe se crea
         const interaction = await this.UserInteractionModel.findOne({ userId: interactionDto.userId, wordId: interactionRegister.wordId });
         if (!interaction) {
+            Logger.log(`Creating new interaction for user ${interactionDto.userId} with word ${interactionDto.word}`);
             return await this.UserInteractionModel.create(interactionRegister);
         }
 
@@ -52,12 +55,15 @@ export class UsersService {
         if (interactionDto.failures) {
             interaction.failures += interactionDto.failures;
         }
+        Logger.log(`Updating interaction for user ${interactionDto.userId} with word ${interactionDto.word}`);
         return await this.UserInteractionModel.updateOne({ userId: interactionDto.userId, wordId: interactionRegister.wordId }, { $set: interaction }).exec();
     }
 
     async getAllInteractionsByUserId(userId: string) {
+        Logger.log(`Getting all interactions for user ${userId}`);
         // Verificar si el id es un ObjectId válido
         if (!isValidObjectId(userId)) {
+            Logger.error(`Invalid user id ${userId}`);
             throw new RpcException({ status: HttpStatus.BAD_REQUEST, message: `Invalid user id ${userId}` });
         }
 
@@ -66,6 +72,7 @@ export class UsersService {
 
         // Si no hay interacciones
         if (!interactions) {
+            Logger.error(`Interactions for user with id ${userId} not found`);
             throw new RpcException({ status: HttpStatus.NOT_FOUND, message: `Interactions for user with id ${userId} not found` });
         }
 
@@ -75,48 +82,62 @@ export class UsersService {
             interaction.wordId = wordData.word;
         }
 
+        Logger.log(`Returning interactions for user ${userId}`);
         return interactions;
     }
 
     async createUser(createUserDto: CreateUserDto) {
+        Logger.log(`Creating user with email ${createUserDto.email}`);
         // Se verifica el email
         if (await this.existEmail(createUserDto.email)) {
+            Logger.error(`User with email ${createUserDto.email} already exists`);
             throw new RpcException({ status: HttpStatus.CONFLICT, message: `User with email ${createUserDto.email} already exists` });
         }
 
         // Encriptar la contraseña antes de hacer el registro en la bd
         createUserDto.password = await hash(createUserDto.password, 10);
 
+        
+
         // Crear el usuario en la bd
         const user = await this.UserModel.create(createUserDto);
+        Logger.log(`User with email ${createUserDto.email} created`);
         return user; // Devolver el usuario creado
     }
 
     async getUserById(id: string) {
+        Logger.log(`Getting user with id ${id}`);
         // Verificar si el id es un ObjectId válido
         if (!isValidObjectId(id)) {
+            Logger.error(`Invalid user id ${id}`);
             throw new RpcException({ status: HttpStatus.BAD_REQUEST, message: `Invalid user id ${id}` });
         }
-
         const user = await this.UserModel.findById(id);
         if (!user) {
+            Logger.error(`User with id ${id} not found`);
             throw new RpcException({ status: HttpStatus.NOT_FOUND, message: `User with id ${id} not found` });
         }
         if (user.deleted) {
+            Logger.error(`User with id ${id} is soft deleted`);
             throw new RpcException({ status: HttpStatus.NOT_FOUND, message: `User with id ${id} is soft deleted` });
         }
+        Logger.log(`Returning user with id ${id}`);
         return user;
     }
 
     async deleteUser(id: string) {
+        Logger.log(`Deleting user with id ${id}`);
         // Se busca el usuario, si no existe se lanzaran las excepciones de la funcion
         await this.getUserById(id);
 
         // Buscar el usuario donde el id coincida y cambiar el campo deleted a true
-        return await this.UserModel.updateOne({ _id: id }, { $set: { deleted: true } });
+        const deletedUser = await this.UserModel.updateOne({ _id: id }, { $set: { deleted: true } });
+        Logger.log(`User with id ${id} deleted`);
+        return deletedUser
     }
 
     async modifyUser(modifyUserDto: ModifyUserDto) {
+        Logger.log(`Modifying user with id ${modifyUserDto.id}`);
         // Separar el id de los datos a actualizar
         const { id, ...updateFields } = modifyUserDto;
 
@@ -125,32 +146,40 @@ export class UsersService {
 
         // Si el modifyUserDto contiene un email se busca para ver si existe, de existir se lanza una excepción
         if (updateFields.email && await this.existEmail(updateFields.email)) {
+            Logger.error(`Ya existe un usuario con el correo ${updateFields.email}`);
             throw new RpcException({ status: HttpStatus.CONFLICT, message: `Ya existe un usuario con el correo ${updateFields.email}` });
         }
 
         // Si se modificará la password se encripta
         if (updateFields.password) {
+            Logger.log(`Encriptando la contraseña del usuario con id ${id}`);
             updateFields.password = await hash(updateFields.password, 10);
         }
 
         // Buscar el usuario por el id y setear los campos
+        Logger.log(`Modifying user in database with id ${id}`);
         return await this.UserModel.updateOne({ _id: id }, { $set: updateFields }).exec(); // Asegurarse de usar exec() para obtener una promesa
     }
 
     async loginUser(loginUserDto: LoginUserDto) {
+        Logger.log(`Login user with email ${loginUserDto.email}`);
         const user = await this.UserModel.findOne({ email: loginUserDto.email });
 
         // Si no se encuentra el usuario
         if (!user) {
+            Logger.error(`User with email ${loginUserDto.email} not found`);
             throw new RpcException({ status: HttpStatus.NOT_FOUND, message: `User with email ${loginUserDto.email} not found` });
         }
 
         // Verificar la contraseña
         if (!await compare(loginUserDto.password, user.password)) {
+            Logger.error(`Incorrect password for user with email ${loginUserDto.email}`);
             throw new RpcException({ status: HttpStatus.FORBIDDEN, message: `Incorrect password` });
         }
 
+        Logger.log(`User with email ${loginUserDto.email} logged in`);
         return {
+            id: user._id,
             name: user.username,
             email: user.email
         };
