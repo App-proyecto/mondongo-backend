@@ -4,6 +4,7 @@ import { CreateUserDto, LoginUserDto } from 'apps/common/users';
 import { UsersService } from './users.service';
 import { ModifyUserDto } from 'apps/common/users/modify-user.dto';
 import { RecoveryEmailDto } from 'apps/common/mails/recovery-email.dto';
+import { InteractionDto } from 'apps/common/users/register-interaction.dto';
 
 @Controller('users')
 export class UsersController {
@@ -23,6 +24,16 @@ export class UsersController {
     @MessagePattern('delete_user')
     deleteUser(@Payload('id') id: string) {
         return this.usersService.deleteUser(id);
+    }
+
+    @MessagePattern('register_interaction')
+    registerInteraction(@Payload() interactionDto: InteractionDto) {
+        return this.usersService.registerInteraction(interactionDto);
+    }
+
+    @MessagePattern('get_all_interactions_by_userid')
+    getAllInteractionsByUserId(@Payload('userId') userId: string) {
+        return this.usersService.getAllInteractionsByUserId(userId);
     }
 
     @MessagePattern('modify_user')

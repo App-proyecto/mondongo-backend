@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Inject, Param, Patch, Post } from '@nest
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { RecoveryEmailDto } from 'apps/common/mails/recovery-email.dto';
 import { CreateUserDto, LoginUserDto, ModifyUserDto } from 'apps/common/users';
+import { InteractionDto } from 'apps/common/users/register-interaction.dto';
 import { NATS_SERVICE } from 'apps/config';
 import { firstValueFrom } from 'rxjs';
 
@@ -53,6 +54,24 @@ export class UsersController {
     async deleteUser(@Param('id') id: string) {
         try {
             return await firstValueFrom( this.client.send('delete_user', { id }) );
+        } catch (error) {
+            throw new RpcException(error);
+        }
+    }
+
+    @Post('interaction')
+    async registerInteraction(@Body() interactionDto: InteractionDto) {
+        try {
+            return await firstValueFrom( this.client.send('register_interaction', interactionDto) );
+        } catch (error) {
+            throw new RpcException(error);
+        }
+    }
+
+    @Get('interaction/:userId')
+    async getAllInteractionsByUserId(@Param('userId') userId: string) {
+        try {
+            return await firstValueFrom( this.client.send('get_all_interactions_by_userid', { userId }) );
         } catch (error) {
             throw new RpcException(error);
         }

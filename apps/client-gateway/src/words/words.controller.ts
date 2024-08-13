@@ -1,5 +1,6 @@
-import { Controller, Get, Inject, Param } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Param, Post } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { CreateWordDto } from 'apps/common/words';
 import { NATS_SERVICE } from 'apps/config';
 import { firstValueFrom } from 'rxjs';
 
@@ -9,12 +10,21 @@ export class WordsController {
         @Inject(NATS_SERVICE) private readonly client: ClientProxy,
     ) {}
 
-    @Get(':term')
-    async getRelatedWords(@Param('term') term: String) {
+    @Post()
+    async createWord(@Body() createWordDto: CreateWordDto) {
 
         try {
-            const words = await firstValueFrom( this.client.send('get_related_words', term ) );
-            return words;
+            return await firstValueFrom( this.client.send('create_word', createWordDto ) );;
+        } catch (error) {
+            throw new RpcException(error);
+        }
+        
+    }
+
+    @Get(':word')
+    async getWordByWord(@Param('word') word: string) {
+        try {
+            return await firstValueFrom( this.client.send('get_word_by_word', { word } ) );;
         } catch (error) {
             throw new RpcException(error);
         }

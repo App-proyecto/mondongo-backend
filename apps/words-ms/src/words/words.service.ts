@@ -1,26 +1,35 @@
-import { HttpService } from '@nestjs/axios';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
-import { firstValueFrom, map } from 'rxjs';
+import { InjectModel } from '@nestjs/mongoose';
+import { CreateWordDto } from 'apps/common/words';
+import { Word } from 'apps/words-ms/schemas/word.schema';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class WordsService {
-    constructor( private httpService: HttpService ) {}
+    constructor( @InjectModel(Word.name) private WordModel: Model<Word> ) {}
 
-    async getRelatedWords(term: String) {
-        
-        // Hacer la peticion a la api
-        const url = `https://api.datamuse.com/words?rel_trg=${term}`;
-        const words = await firstValueFrom( this.httpService.get(url).pipe(map(response => response.data)) );
-        
-        // Comprobar si `words` tiene datos
-        if (!words || words.length === 0) {
-            throw new RpcException({ 
-            status: HttpStatus.NOT_FOUND, 
-            message: `No se encontraron palabras relacionadas con "${term}".` 
-            });
+    // No se llamara explicitamente a este metodo
+    async createWord(createWordDto: CreateWordDto) {
+        return await this.WordModel.create({word: createWordDto.word});
+    }
+
+    async getWordByWord(word: string) {
+        const wordFinded = await this.WordModel.findOne({ word: word })
+        if ( !wordFinded ) {
+            const createWordDto = new CreateWordDto();
+            createWordDto.word = word;
+            this.createWord(createWordDto);
+            return this.getWordByWord(word); // tene que cerra el estadio
         }
+        return wordFinded;
+    }
 
-        return words;
+    async getWordById(id: string) {
+        const wordFinded = await this.WordModel.findById(id);
+        if ( !wordFinded ) {
+            throw new RpcException({ status: HttpStatus.NOT_FOUND, message: `Word ${id} not found` });
+        }
+        return wordFinded;
     }
 }
